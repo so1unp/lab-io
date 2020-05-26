@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>README</title>
+  <style type="text/css">
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.line-block{white-space: pre-line;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="laboratorio-6---es">Laboratorio 6 - E/S</h1>
+<p><strong>Modo de entrega</strong>: realizar un informe en formato PDF donde se respondan las consignas de cada ejercicio. En aquellos donde deban modificar archivos de <em>xv6</em>, subir las copias de los mismos en el repositorio del laboratorio.</p>
+<p><strong>Ejercicios obligatorios</strong>: 1, 2, 3, 4 y 5.</p>
+<h2 id="buffering">Buffering</h2>
+<h3 id="ejercicio-1">Ejercicio 1</h3>
+<p>El programa <code>write_bytes.c</code> escribe la cantidad de bytes indicada en un archivo. Por ejemplo, el siguiente comando escribe 100 Mb en el archivo <code>tmp.txt</code>, usando un buffer de 4096 bytes:</p>
+<pre><code>$ bin/write_bytes tmp.txt 104857600 4096
+</code></pre>
+<h4 id="responder">Responder</h4>
+<ol>
+<li>Obtener un promedio de tiempo de ejecución del programa, usando el comando <code>time</code>, al crear un archivo de 100 Mb, con tamaños de buffer de 256, 1024, 4096 y 8192 bytes. Presentar una tabla que indique el tiempo total, de usuario, de sistema y uso de la CPU. Realizar 10 ejecuciones para obtener el promedio.</li>
+<li>Explicar los resultados.</li>
+</ol>
+<h2 id="es-en-una-cpu-x86">E/S en una CPU x86</h2>
+<p>Leer el Capítulo 8 del archivo <code>i386.pdf</code>, hasta la página 148 (ignorar la sección 8.3), donde se describe la E/S en una CPU Intel 386, con comandos específicos de E/S y mapeada en memoria.</p>
+<h3 id="ejercicio-2-comandos-de-es">Ejercicio 2: Comandos de E/S</h3>
+<ol>
+<li>¿Cuál es el tamaño del espacio de direcciones de E/S?</li>
+<li>¿Que instrucciones son utilizadas para envíar datos desde los registros de la CPU a los puertos de E/S? ¿Y para E/S mapeada en memoria?</li>
+</ol>
+<h2 id="terminal">Terminal</h2>
+<p>Cuando ejecutan xv6 utilizando el comando <code>make -qemu-nox</code>, se simula la conexión mediante una terminal RS-232. Esto es, cada caracter que escriben y ven por pantalla, es enviado por medio de un conexión en el puerto COM1 de la PC simulada por qemu.</p>
+<p>En el archivo <code>console.c</code> se implementa gran parte de la funcionalidad de E/S de la terminal. Los comandos envíados por el usuario se obtienen desde desde el teclado y/o desde el puerto serial (RS232). La salida es presentada por pantalla y también a travéz del puerto serial.</p>
+<h3 id="ejercicio-3-ciclo-de-vida-del-requerimiento-de-es">Ejercicio 3: Ciclo de vida del requerimiento de E/S</h3>
+<ol>
+<li>Describir el ciclo de vida del requerimiento de E/S al recibir un caracter desde el puerto serial, hasta que es impreso en la pantalla de la terminal, explicando la secuencia de funciones invocadas, interrupciones, etc.</li>
+<li>¿Se utilizan comandos específicos de E/S, o son mapeados en memoria?</li>
+</ol>
+<h3 id="ejercicio-4-independencia-del-dispositivo">Ejercicio 4: Independencia del dispositivo</h3>
+<ol>
+<li>Describir como se logra la independencia de dispositivo, en el caso de la terminal. Pista: ver la función <code>consoleinit()</code> en <code>console.c</code>, y el archivo <code>file.h</code>.</li>
+</ol>
+<h3 id="ejercicio-5-salida-de-la-terminal-por-la-pantalla">Ejercicio 5: Salida de la terminal por la pantalla</h3>
+<p>Para simular la salida por un monitor, conectado a la tarjeta de vídeo en la PC, hay que ejecutar xv6 utilizando el comando <code>make -qemu</code> (sin el <code>-nox</code>).</p>
+<p>La función <code>cgaputc()</code> escribe el carácter que recibe como parámetro en la memoria de video en modo texto, suponiendo un adaptador de vídeo CGA. El archivo <code>cga.pdf</code> es el manual de referencia de este adaptador.</p>
+<p>Se utilizan los siguientes datos:</p>
+<ul>
+<li><code>CRTPORT</code>, un <code>#define</code> con el valor <code>0x3D4</code>, que es la <strong>dirección en la memoria de E/S</strong> del puerto de comandos de la controladora de vídeo.</li>
+<li>La variable <code>*crt</code>, que es un puntero a la <strong>memoria de video en modo texto</strong>, mapeada en la dirección <code>0xB8000</code>. La memoria de vídeo es un arreglo de 4000 bytes que representa una grilla de 80 columnas y 25 filas (ver página 12 en <code>cga.pdf</code>). Cada carácter requiere 2 bytes, el primero indica el color de la fuente y fondo, mientras que el segundo es el código ASCII.</li>
+<li>La posición del cursor es almacenada por la controladora de vídeo en los registros <em>Cursor Location High Register</em> y <em>Cursor Location Low Register</em> (ver archivo <code>cga.txt</code>).</li>
+</ul>
+<p>La función <code>cgaputc()</code> realiza las siguientes tareas:</p>
+<ol>
+<li>Obtiene la posición del cursor hardware, y lo almacena en la variable <code>pos</code>.</li>
+<li>Si el carácter es imprimible, lo escribe en la memoria de vídeo en la posición correspondiente.</li>
+<li>Si es un <code>\n</code> o un <code>BACKSPACE</code>, actualiza la variable <code>pos</code> para reflejar el cambio de la posición del cursor.</li>
+<li>Comprueba que la nueva posición del cursor (<code>pos++</code>) este dentro de los límites de la pantalla.</li>
+<li>Realiza el <em>scroll</em> (desplazamiento) de la pantalla si corresponde.</li>
+<li>Actualiza el cursor hardware con la nueva posición.</li>
+</ol>
+<h4 id="responder-1">Responder:</h4>
+<ol>
+<li>Indicar para cada una de las tareas de la función <code>cgaput()</code>, si es una operación de E/S mapeada en memoria o mediante registros especiales de E/S. Justificar.</li>
+<li>Modificar <code>cgaput.c</code> para cambiar el color con que el que se imprimen los caracteres por pantalla. Probar también cambiar el color de fondo. Ver la sección <em>Alphanumeric Modes</em> (pag. 10) en la documentación CGA (recordar que Intel usa <em>little-endian</em>). Copiar en el repositorio del laboratorio el archivo <code>console.c</code> modificado, con los comentarios correspondientes que indiquen brevemente las modificaciones realizadas.</li>
+</ol>
+<h2 id="es-de-disco">E/S de disco</h2>
+<p>Para realizar estos ejercicios, van a tener que entender como funciona el <em>driver</em> de disco de xv6, y parte del sistema de E/S para disco. Lean y usen de referencia el documento <code>xv6-ide.pdf</code>, que describe la implementación de la E/S de disco en xv6, y la copia del archivo <code>ide.c</code> que tiene muchos comentarios adicionales.</p>
+<h3 id="ejercicio-6-ciclo-de-vida-del-requerimiento-de-es">Ejercicio 6: Ciclo de vida del requerimiento de E/S</h3>
+<p>Suponer que un programa escribe el caracter <code>a</code> en un archivo en disco:</p>
+<pre><code>write(fd, &#39;a&#39;, 1);
+</code></pre>
+<ol>
+<li>Describir el ciclo de vida del requerimiento de E/S, explicando la secuencia de funciones invocadas, interrupciones, etc.</li>
+<li>¿Qué tipo de política de planificación de disco implementa <em>xv6</em>?</li>
+<li>¿Utiliza DMA o la operación de E/S es dirigida por la CPU?</li>
+<li>En la función <code>idewait()</code> se realiza un <em>polling</em> para esperar que el disco este listo, ¿por qué se decidió usar una espera activa?</li>
+</ol>
+<hr />
+<p>¡Fin del Laboratorio 6!</p>
+</body>
+</html>

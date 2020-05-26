@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>DEBUG</title>
+  <style type="text/css">
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.line-block{white-space: pre-line;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="debugging-xv6">Debugging xv6</h1>
+<p>Para realizar los ejercicios del laboratorio, resulta muy útil poder ejecutar paso a paso <em>xv6</em>. Para esto, vamos a utilizar el debugger <em>gdb</em>.</p>
+<h2 id="número-de-cpus">Número de CPUs</h2>
+<p>Para que sea más sencillo la ejecución paso a paso del sistema, es aconsejable que qemu simule un sistema con un único procesador. Hay dos maneras de hacerlo. La primera, es modificar en el Makefile la variable <code>CPUS</code>, para que siempre se utilice un único procesador:</p>
+<pre><code>CPUS := 1
+</code></pre>
+<p>Como alternativa, se puede indicar el número de procesadores al ejecutar qemu:</p>
+<pre><code>$ make qemu-nox-gdb CPUS=1
+</code></pre>
+<h2 id="configurar-gdb">Configurar gdb</h2>
+<p>Suponiendo que xv6 este en el directorio <code>/home/usuario/xv6</code>, tiene que agregar ese <em>path</em> en el archivo <code>.gdbinit</code>.</p>
+<p>El siguiente comando lo hace creando el archivo <code>.gdbinit</code> si no existiera:</p>
+<pre><code>$ echo &quot;add-auto-load-safe-path /home/usuario/xv6&quot; &gt;&gt; ~/.gdbinit
+</code></pre>
+<h2 id="ejecutar-qemu-con-gdb">Ejecutar qemu con gdb</h2>
+<p>Vamos a necesitar trabajar desde dos terminales, en una se ejecuta xv6, en la otra gdb. En ambas terminales el directorio de trabajo tiene que ser donde este instalado xv6.</p>
+<p>En una terminal ejecutamos:</p>
+<pre><code>$ make qemu-nox-gdb CPUS=1
+...
+*** Now run &#39;gdb&#39;.
+qemu-system-i386 -nographic -drive file=fs.img,index=1,media=disk,format=raw -drive file=xv6.img,index=0,media=disk,format=raw -smp 1 -m 512  -S -gdb tcp::26000
+</code></pre>
+<p>Ahora, en la otra terminal ejecutamos gdb, y nos tiene que aparecer algo así:</p>
+<pre><code>$ gdb
+...
++ target remote localhost:26000
+warning: No executable has been specified and target does not support determining executable automatically.  Try using the &quot;file&quot; command.
+The target architecture is assumed to be i8086
+[f000:fff0]    0xffff0: ljmp   $0x3630,$0xf000e05b
+0x0000fff0 in ?? ()
++ symbol-file kernel
+warning: A handler for the OS ABI &quot;GNU/Linux&quot; is not built into this configuration of GDB.  Attempting to continue with the default i8086 settings.
+
+(gdb)
+</code></pre>
+<p>Si todo funciono correctamente, gdb se queda a la espera de ordenes. Si escribimos <code>c</code> (<em>continue</em>) y damos enter, debemos ver como en la otra terminal se reanuda la ejecución de xv6.</p>
+<p>Si, estando en la terminal que ejecuta gdb, presionamos ^C, gdb interrumpe la ejecución de xv6, indicando donde quedo detenido, y espera por ordenes:</p>
+<pre><code>(gdb) c
+Continuing.
+^C
+Program received signal SIGINT, Interrupt.
+The target architecture is assumed to be i386
+=&gt; 0x80103811 &lt;mycpu+17&gt;:       mov    0x80112d00,%esi
+mycpu () at proc.c:48
+48        for (i = 0; i &lt; ncpu; ++i) {
+(gdb)
+</code></pre>
+<p>En este caso, interrumpimos la ejecución durante la función <code>mycpu()</code> en el archivo <code>proc.c</code>.</p>
+<p>Podemos ejecutar luego paso a paso con <code>s</code> (<em>step</em>) o <code>n</code> (<em>next</em>). La diferencia entre ambas es que <code>n</code> no entra en las funciones, y <code>s</code> sí. Pueden ver la documentación ejecutando <code>help</code>.</p>
+<p>También es interesante el comando <code>list</code>, que presenta fragmento del codigo fuente antes y despues de la actual sentencia:</p>
+<pre><code>(gdb) list
+43        panic(&quot;mycpu called with interrupts enabled\n&quot;);
+44
+45        apicid = lapicid();
+46        // APIC IDs are not guaranteed to be contiguous. Maybe we should have
+47        // a reverse map, or reserve a register to store &amp;cpus[i].
+48        for (i = 0; i &lt; ncpu; ++i) {
+49          if (cpus[i].apicid == apicid)
+50            return &amp;cpus[i];
+51        }
+52        panic(&quot;unknown apicid\n&quot;);
+(gdb)
+</code></pre>
+<h2 id="breakpoints">Breakpoints</h2>
+<p>Mediante el comando <code>break</code> podemos crear un breakpoint en una función o en una línea de un archivo fuente. Por ejemplo:</p>
+<pre><code>break proc.c:51
+break idestart()
+</code></pre>
+<h2 id="mas-info">Mas info...</h2>
+<p>Hay muchos tutoriales en la red sobre gdb, como por ejemplo <a href="http://www.unknownroad.com/rtfm/gdbtut/gdbtoc.html">este</a>.</p>
+<p>También pueden consultar la <a href="https://www.gnu.org/software/gdb/documentation/">documentación oficial</a>.</p>
+</body>
+</html>
