@@ -1,8 +1,6 @@
-# Laboratorio 6 - E/S
+# Laboratorio 8 - E/S
 
 **Modo de entrega**: realizar un informe en formato PDF donde se respondan las consignas de cada ejercicio. En aquellos donde deban modificar archivos de *xv6*, subir las copias de los mismos en el repositorio del laboratorio.
-
-**Ejercicios obligatorios**: 1, 2, 3, 4 y 5.
 
 ## Buffering
 
