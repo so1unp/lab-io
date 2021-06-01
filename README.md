@@ -2,38 +2,38 @@
 
 **Modo de entrega**: realizar un informe en formato PDF donde se respondan las consignas de cada ejercicio. En aquellos donde deban modificar archivos de *xv6*, subir las copias de los mismos en el repositorio del laboratorio.
 
-## Buffering
-
-### Ejercicio 1
+## Ejercicio 1: buffering
 El programa `write_bytes.c` escribe la cantidad de bytes indicada en un archivo. Por ejemplo, el siguiente comando escribe 100 Mb en el archivo `tmp.txt`, usando un buffer de 4096 bytes:
 ```
 $ bin/write_bytes tmp.txt 104857600 4096
 ```
-#### Responder
+
+Responder:
 1. Obtener un promedio de tiempo de ejecución del programa, usando el comando `time`, al crear un archivo de 100 Mb, con tamaños de buffer de 256, 1024, 4096 y 8192 bytes. Presentar una tabla que indique el tiempo total, de usuario, de sistema y uso de la CPU. Realizar 10 ejecuciones para obtener el promedio.
 2. Explicar los resultados.
 
-## E/S en una CPU x86
-Leer el Capítulo 8 del archivo `i386.pdf`, hasta la página 148 (ignorar la sección 8.3), donde se describe la E/S en una CPU Intel 386, con comandos específicos de E/S y mapeada en memoria.
+## Ejercicio 2: Comandos de E/S en una CPU x86
+el capítulo 8 del archivo `i386.pdf` describe la E/S en una CPU Intel 386, con comandos específicos de e/s y mapeada en memoria. Leer el capítulo hasta la página 148 (ignorar la sección 8.3 en adelante). 
 
-### Ejercicio 2: Comandos de E/S
+Responder:
 1. ¿Cuál es el tamaño del espacio de direcciones de E/S?
-2. ¿Que instrucciones son utilizadas para envíar datos desde los registros de la CPU a los puertos de E/S? ¿Y para E/S mapeada en memoria?
+2. ¿Qué instrucciones son utilizadas para envíar datos a los puertos de E/S? 
+3. ¿Qué instrucciones se emplean para para E/S mapeada en memoria? ¿Cuál es la diferencia con las anteriores instrucciones?
 
-## Terminal
-Cuando ejecutan xv6 utilizando el comando `make -qemu-nox`, se simula la conexión mediante una terminal RS-232. Esto es, cada caracter que escriben y ven por pantalla, es enviado por medio de un conexión en el puerto COM1 de la PC simulada por qemu.
+## Ejercicio 3: Comunicación por el puerto serie
+Cuando ejecutan xv6 utilizando el comando `make -qemu-nox`, se simula la conexión mediante una terminal RS-232: cada caracter que escriben y ven por pantalla, es transmitido por medio de una conexión serial a traves puerto COM1 de la PC.
 
-En el archivo `console.c` se implementa gran parte de la funcionalidad de E/S de la terminal. Los comandos envíados por el usuario se obtienen desde desde el teclado y/o desde el puerto serial (RS232). La salida es presentada por pantalla y también a travéz del puerto serial.
+En el archivo `console.c` se implementa la mayor parte de la funcionalidad de E/S referida a la terminal. Los comandos envíados por el usuario se obtienen desde desde el teclado conectado físicamente a la PC y/o desde el puerto serial (RS232). La salida es presentada por pantalla y también enviada por el puerto serial.
 
-### Ejercicio 3: Ciclo de vida del requerimiento de E/S
+Responder:
 1. Describir el ciclo de vida del requerimiento de E/S al recibir un caracter desde el puerto serial, hasta que es impreso en la pantalla de la terminal, explicando la secuencia de funciones invocadas, interrupciones, etc. 
 2. ¿Se utilizan comandos específicos de E/S, o son mapeados en memoria?
 
-### Ejercicio 4: Independencia del dispositivo
+## Ejercicio 4: Independencia del dispositivo
 1. Describir como se logra la independencia de dispositivo, en el caso de la terminal. Pista: ver la función `consoleinit()` en `console.c`, y el archivo `file.h`.
 
-### Ejercicio 5: Salida de la terminal por la pantalla
-Para simular la salida por un monitor, conectado a la tarjeta de vídeo en la PC, hay que ejecutar xv6 utilizando el comando `make -qemu` (sin el `-nox`).
+## Ejercicio 5: Salida de la terminal a la pantalla
+Para simular la salida por un monitor conectado a la tarjeta de vídeo en la PC, hay que ejecutar xv6 utilizando el comando `make -qemu` (sin el `-nox`).
 
 La función `cgaputc()` escribe el carácter que recibe como parámetro en la memoria de video en modo texto, suponiendo un adaptador de vídeo CGA. El archivo `cga.pdf` es el manual de referencia de este adaptador. 
 
@@ -50,15 +50,14 @@ La función `cgaputc()` realiza las siguientes tareas:
 5. Realiza el _scroll_ (desplazamiento) de la pantalla si corresponde.
 6. Actualiza el cursor hardware con la nueva posición.
 
-#### Responder:
+Responder:
 1. Indicar para cada una de las tareas de la función `cgaput()`, si es una operación de E/S mapeada en memoria o mediante registros especiales de E/S. Justificar.
-2. Modificar `cgaput.c` para cambiar el color con que el que se imprimen los caracteres por pantalla. Probar también cambiar el color de fondo. Ver la sección *Alphanumeric Modes* (pag. 10) en la documentación CGA (recordar que Intel usa *little-endian*). Copiar en el repositorio del laboratorio el archivo `console.c` modificado, con los comentarios correspondientes que indiquen brevemente las modificaciones realizadas.
+2. Modificar `cgaput.c` para cambiar el color con que el que se imprimen los caracteres por pantalla. Probar también cambiar el color de fondo. Ver la sección *Alphanumeric Modes* (pag. 10) en la documentación CGA (recordar que Intel usa *little-endian*). 
 
-## E/S de disco
+## Ejercicio 6: E/S de disco
 
-Para realizar estos ejercicios, van a tener que entender como funciona el *driver* de disco de xv6, y parte del sistema de E/S para disco. Lean y usen de referencia el documento `xv6-ide.pdf`, que describe la implementación de la E/S de disco en xv6, y la copia del archivo `ide.c` que tiene muchos comentarios adicionales.
+Para realizar este ejercicio, van a tener que entender como funciona el *driver* de disco de xv6, y parte del sistema de E/S para disco. Lean y usen de referencia el documento `xv6-ide.pdf`, que describe la implementación de la E/S de disco en xv6, y la copia del archivo `ide.c` que tiene muchos comentarios adicionales.
 
-### Ejercicio 6: Ciclo de vida del requerimiento de E/S
 Suponer que un programa escribe el caracter `a` en un archivo en disco:
 
 ```
@@ -68,8 +67,8 @@ write(fd, 'a', 1);
 1. Describir el ciclo de vida del requerimiento de E/S, explicando la secuencia de funciones invocadas, interrupciones, etc.
 2. ¿Qué tipo de política de planificación de disco implementa _xv6_?
 3. ¿Utiliza DMA o la operación de E/S es dirigida por la CPU?
-4. En la función `idewait()` se realiza un *polling* para esperar que el disco este listo, ¿por qué se decidió usar una espera activa? 
+4. En la función `idewait()` se realiza un *polling* para esperar que el disco este listo, ¿por qué se usa una espera activa? 
 
 ---
 
-¡Fin del Laboratorio 6!
+¡Fin del Laboratorio!
