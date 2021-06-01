@@ -40,29 +40,30 @@ Se utilizan los siguientes datos:
 - La variable `*crt`, que es un puntero a la **memoria de video en modo texto**, mapeada en la dirección `0xB8000`. La memoria de vídeo es un arreglo de 4000 bytes que representa una grilla de 80 columnas y 25 filas (ver página 12 en `cga.pdf`). Cada carácter requiere 2 bytes, el primero indica el color de la fuente y fondo, mientras que el segundo es el código ASCII.
 - La posición del cursor es almacenada por la controladora de vídeo en los registros _Cursor Location High Register_ y _Cursor Location Low Register_ (ver archivo `cga.txt`).
 
-La función `cgaputc()` realiza las siguientes tareas:
-1. Obtiene la posición del cursor hardware, y lo almacena en la variable `pos`.
-2. Si el carácter es imprimible, lo escribe en la memoria de vídeo en la posición correspondiente. 
-3. Si es un `\n` o un `BACKSPACE`, actualiza la variable `pos` para reflejar el cambio de la posición del cursor.
-4. Comprueba que la nueva posición del cursor (`pos++`) este dentro de los límites de la pantalla.
+La función `cgaputc()` realiza las siguientes acciones:
+1. Obtiene la posición del cursor y lo almacena en la variable `pos`.
+3. Si el caracter a mostrar es un `\n` o un `BACKSPACE` actualiza la variable `pos`, que almancena la posición del cursor.
+2. En cambio, si el carácter es imprimible, lo escribe en la memoria de vídeo en la posición correspondiente. 
+4. Comprueba que la nueva posición del cursor este dentro de los límites de la pantalla.
 5. Realiza el _scroll_ (desplazamiento) de la pantalla si corresponde.
 6. Actualiza el cursor hardware con la nueva posición.
 
 Responder:
-1. Indicar para cada una de las tareas de la función `cgaput()`, si es una operación de E/S mapeada en memoria o mediante registros especiales de E/S. Justificar.
+1. Indicar para cada una de las acciones anteriores, si es una operación de E/S mapeada en memoria o utilizar registros especiales de E/S. Justificar.
 2. Modificar `cgaput.c` para cambiar el color con que el que se imprimen los caracteres por pantalla. Probar también cambiar el color de fondo. Ver la sección *Alphanumeric Modes* (pag. 10) en la documentación CGA (recordar que Intel usa *little-endian*). 
 
 ## Ejercicio 5: E/S de disco
 
-Para realizar este ejercicio, van a tener que entender como funciona el *driver* de disco de _xv6_, y parte del sistema de E/S para disco. Lean y usen de referencia el documento `xv6-ide.pdf`, que describe la implementación de la E/S de disco en _xv6_, y la copia del archivo `ide.c` que tiene muchos comentarios adicionales.
+En este ejercicio se va a estudiar como funciona el *driver* de disco de y parte del sistema de E/S de _xv6_. Usen de referencia el documento `xv6-ide.pdf`, que describe la implementación de la E/S de disco en _xv6_, y la copia del archivo `ide.c`, que tiene muchos comentarios adicionales.
 
-Suponer que un programa escribe el caracter `a` en un archivo en disco:
+Suponer que un programa quiere escribe el caracter `a` en un archivo, utilizando la llamada al sistema `write()`:
 
 ```
 write(fd, 'a', 1);
 ```
 
-1. Describir el ciclo de vida del requerimiento de E/S, explicando la secuencia de funciones invocadas, interrupciones, etc.
+Responder:
+1. Describir el ciclo de vida del requerimiento de E/S, explicando que llamadas al sistema son utilizadas, que interrupciones tienen que tenerse en cuenta, y la secuencia de funciones invocadas dentro del kernel.
 2. ¿Qué tipo de política de planificación de disco implementa _xv6_?
 3. ¿Utiliza DMA o la operación de E/S es dirigida por la CPU?
 4. En la función `idewait()` se realiza un *polling* para esperar que el disco este listo, ¿por qué se usa una espera activa? 
