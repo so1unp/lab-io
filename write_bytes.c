@@ -28,9 +28,13 @@
    If compiled with -DUSE_FSYNC, perform an fsync() after each write, so that
    data and metadata are flushed to the disk.
 */
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stddef.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include "tlpi_hdr.h"
+#include <unistd.h>
 
 int
 main(int argc, char *argv[])
@@ -39,15 +43,19 @@ main(int argc, char *argv[])
     char *buf;
     int fd, openFlags;
 
-    if (argc != 4 || strcmp(argv[1], "--help") == 0)
-        usageErr("%s file num-bytes buf-size\n", argv[0]);
+    if (argc != 4) {
+        fprintf(stderr, "Uso: %s file num-bytes buf-size\n", argv[0]);
+        exit(EXIT_FAILURE);
+    }
 
-    numBytes = getLong(argv[2], GN_GT_0, "num-bytes");
-    bufSize = getLong(argv[3], GN_GT_0, "buf-size");
+    numBytes = atol(argv[2]);
+    bufSize = atol(argv[3]);
 
     buf = malloc(bufSize);
-    if (buf == NULL)
-        errExit("malloc");
+    if (buf == NULL) {
+        perror("malloc");
+        exit(EXIT_FAILURE);
+    }
 
     openFlags = O_CREAT | O_WRONLY;
 
@@ -56,27 +64,36 @@ main(int argc, char *argv[])
 #endif
 
     fd = open(argv[1], openFlags, S_IRUSR | S_IWUSR);
-    if (fd == -1)
-        errExit("open");
+    if (fd == -1) {
+        perror(argv[1]);
+        exit(EXIT_FAILURE);
+    }
 
-    for (totWritten = 0; totWritten < numBytes;
-            totWritten += thisWrite) {
-        thisWrite = min(bufSize, numBytes - totWritten);
+    for (totWritten = 0; totWritten < numBytes; totWritten += thisWrite) {
+        thisWrite = bufSize > (numBytes - totWritten) ? (numBytes - totWritten) : bufSize;
 
-        if (write(fd, buf, thisWrite) != thisWrite)
-            fatal("partial/failed write");
+        if (write(fd, buf, thisWrite) != thisWrite) {
+            fprintf(stderr, "partial/failed write");
+        }
 
 #ifdef USE_FSYNC
-        if (fsync(fd))
-            errExit("fsync");
+        if (fsync(fd)) {
+            perror("fsync");
+            exit(EXIT_FAILURE);
+        }
 #endif
 #ifdef USE_FDATASYNC
-        if (fdatasync(fd))
-            errExit("fdatasync");
+        if (fdatasync(fd)) {
+            perror("fdatasync");
+            exit(EXIT_FAILURE);
+        }
 #endif
     }
 
-    if (close(fd) == -1)
-        errExit("close");
+    if (close(fd) == -1) {
+        perror("close");
+        exit(EXIT_FAILURE);
+    }
+
     exit(EXIT_SUCCESS);
 }

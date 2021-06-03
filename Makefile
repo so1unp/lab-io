@@ -1,7 +1,6 @@
 CC=gcc
 BIN=./bin
-CFLAGS=-Wall -g -pthread -lm -Ilib/
-LIBS=lib/get_num.c lib/error_functions.c
+CFLAGS=-Wall -g
 
 PROG=write_bytes
 
