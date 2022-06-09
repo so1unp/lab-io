@@ -1,33 +1,15 @@
-/*************************************************************************\
-*                  Copyright (C) Michael Kerrisk, 2018.                   *
-*                                                                         *
-* This program is free software. You may use, modify, and redistribute it *
-* under the terms of the GNU General Public License as published by the   *
-* Free Software Foundation, either version 3 or (at your option) any      *
-* later version. This program is distributed without any warranty.  See   *
-* the file COPYING.gpl-v3 for details.                                    *
-\*************************************************************************/
-
-/* Supplementary program for Chapter 13 */
-
 /* write_bytes.c
-
-   Write bytes to a file. (A simple program for file I/O benchmarking.)
-
-   Usage: write_bytes file num-bytes buf-size
-
-   Writes 'num-bytes' bytes to 'file', using a buffer size of 'buf-size'
-   for each write().
-
-   If compiled with -DUSE_O_SYNC, open the file with the O_SYNC flag,
-   so that all data and metadata changes are flushed to the disk.
-
-   If compiled with -DUSE_FDATASYNC, perform an fdatasync() after each write,
-   so that data--and possibly metadata--changes are flushed to the disk.
-
-   If compiled with -DUSE_FSYNC, perform an fsync() after each write, so that
-   data and metadata are flushed to the disk.
-*/
+ *
+ * Escribe bytes en el archivo indicado.
+ *
+ * Uso: ./write_bytes archivo num-bytes buffer-size sync
+ *
+ * Escribe la cantidad de bytes indicada en 'num-bytes' en el archivo
+ * 'archivo', usando un buffer de tamaño 'buffer-size'. Si la opción 'sync'
+ * es igual a 1, entonces las escrituras son sincrónicas.  
+ *
+ * Basado en el programa write_bytes.c de Michel Kerrisk.
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -43,8 +25,12 @@ main(int argc, char *argv[])
     char *buf;
     int fd, openFlags;
 
-    if (argc != 4) {
-        fprintf(stderr, "Uso: %s file num-bytes buf-size\n", argv[0]);
+    if (argc != 5) {
+        fprintf(stderr, "Uso: %s archivo numbytes bufsize sync\n", argv[0]);
+        fprintf(stderr, "\tarchivo:  archivo donde se escribiran los bytes.\n");
+        fprintf(stderr, "\tnumbytes: cantidad de bytes a esribir en el archivo.\n");
+        fprintf(stderr, "\tbufsize:  tamaño del buffer a utilizar.\n");
+        fprintf(stderr, "\tsync:     1 para hacer todas las escrituras sincrónicas.\n");
         exit(EXIT_FAILURE);
     }
 
@@ -59,10 +45,10 @@ main(int argc, char *argv[])
 
     openFlags = O_CREAT | O_WRONLY;
 
-#if defined(USE_O_SYNC) && defined(O_SYNC)
-    openFlags |= O_SYNC;
-#endif
-
+    if (atoi(argv[4]) == 1) {
+        openFlags |= O_SYNC;
+    }
+    
     fd = open(argv[1], openFlags, S_IRUSR | S_IWUSR);
     if (fd == -1) {
         perror(argv[1]);
@@ -75,19 +61,6 @@ main(int argc, char *argv[])
         if (write(fd, buf, thisWrite) != thisWrite) {
             fprintf(stderr, "partial/failed write");
         }
-
-#ifdef USE_FSYNC
-        if (fsync(fd)) {
-            perror("fsync");
-            exit(EXIT_FAILURE);
-        }
-#endif
-#ifdef USE_FDATASYNC
-        if (fdatasync(fd)) {
-            perror("fdatasync");
-            exit(EXIT_FAILURE);
-        }
-#endif
     }
 
     if (close(fd) == -1) {
